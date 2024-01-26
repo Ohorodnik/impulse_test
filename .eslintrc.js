@@ -21,6 +21,7 @@ module.exports = {
     '@typescript-eslint/explicit-function-return-type': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'error',
-    'max-len': ['warn', { 'code': 100 }]
+    'max-len': ['warn', { 'code': 100 }],
+    "@typescript-eslint/no-namespace": "off"
   },
 };

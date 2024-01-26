@@ -20,4 +20,8 @@ model User {
   age Int?
   password Bytes
   salt Bytes
+
+
+  @@index(fields: [email])
 }
+

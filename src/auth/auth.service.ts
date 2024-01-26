@@ -1,13 +1,39 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { pbkdf2, randomBytes, timingSafeEqual } from 'node:crypto';
+import { Prisma, User } from '@prisma/client';
+import { pbkdf2, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { EnvironmentVariables } from 'src/env.validation';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { promisify } from 'util';
+import { JwtService } from '@nestjs/jwt';
 const pbkdf2Promisified = promisify(pbkdf2);
 
 @Injectable()
 export class AuthService {
-  constructor(private configService: ConfigService<EnvironmentVariables, true>) {}
+  constructor(
+    private configService: ConfigService<EnvironmentVariables, true>,
+    private prismaService: PrismaService,
+    private jwtService: JwtService,
+  ) {}
+
+  public async getUserByEmail(email: User['email']): Promise<User | null> {
+    return this.prismaService.user.findUnique({ where: { email } });
+  }
+
+  public async createUser(userData: Prisma.UserCreateInput): Promise<User> {
+    return this.prismaService.user.create({
+      data: {
+        id: randomUUID(),
+        ...userData,
+      },
+    });
+  }
+
+  public async isUserExists(user: Pick<User, 'email'>): Promise<boolean> {
+    return this.prismaService.user
+      .count({ where: { email: user.email } })
+      .then((count) => count > 0);
+  }
 
   public async encryptPassword(
     pwd: string,
@@ -38,5 +64,9 @@ export class AuthService {
   ): Promise<boolean> {
     const { password: encryptedClaimedPwd } = await this.encryptPassword(claimedPwd, salt);
     return timingSafeEqual(encryptedClaimedPwd, realPwd);
+  }
+
+  public async verifyJwt(jwt: string): Promise<object> {
+    return this.jwtService.verifyAsync<object>(jwt);
   }
 }
