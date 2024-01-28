@@ -1,4 +1,16 @@
 services:
+  node:
+    build:
+      dockerfile: Dockerfile
+      context: .
+      target: prod
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
   db:
     image: postgres:16.1-bullseye
     restart: always
@@ -8,3 +20,8 @@ services:
       POSTGRES_PASSWORD: "${DB_PASSWORD}"
       POSTGRES_USER: "${DB_USER}"
       POSTGRES_DB: "${DB_NAME}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
